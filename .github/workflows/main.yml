@@ -20,8 +20,13 @@ jobs:
       - name: Download Loophole CLI
         run: |
           curl -L -o loophole.zip "https://loophole.cloud/download/windows/loophole-cli-latest.zip"
+          Start-Sleep -Seconds 2
+          if ((Get-Item loophole.zip).Length -lt 10000) { throw "Download failed or returned an invalid file." }
+
+      - name: Extract Loophole
+        run: |
           Expand-Archive loophole.zip -DestinationPath loophole
-          if (!(Test-Path "loophole\loophole.exe")) { throw "Loophole download failed." }
+          if (!(Test-Path "loophole\loophole.exe")) { throw "Loophole executable not found after extraction." }
 
       - name: Start Loophole Tunnel
         run: |
