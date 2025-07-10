@@ -19,8 +19,10 @@ jobs:
 
       - name: Download Pinggy Client
         run: |
-          curl -L -o pinggy.exe https://pinggy.io/download/windows/pinggy.exe
+          curl -L -o pinggy.exe "https://pinggy.io/download/windows/pinggy.exe"
+          Start-Sleep -Seconds 2
+          if (!(Test-Path "pinggy.exe")) { throw "Pinggy download failed." }
 
       - name: Start Pinggy Tunnel
         run: |
-          .\pinggy.exe tcp --forward 127.0.0.1:3389
+          Start-Process -FilePath ".\pinggy.exe" -ArgumentList 'tcp --forward 127.0.0.1:3389' -NoNewWindow
