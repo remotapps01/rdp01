@@ -19,10 +19,12 @@ jobs:
 
       - name: Download Pinggy Client
         run: |
-          curl -L -o pinggy.exe "https://pinggy.io/download/windows/pinggy.exe"
-          Start-Sleep -Seconds 2
+          Invoke-WebRequest -Uri "https://pinggy.io/download/windows/pinggy.exe" -OutFile "pinggy.exe"
+          Start-Sleep -Seconds 3
           if (!(Test-Path "pinggy.exe")) { throw "Pinggy download failed." }
 
-      - name: Start Pinggy Tunnel
+      - name: Launch Pinggy Tunnel
         run: |
-          Start-Process -FilePath ".\pinggy.exe" -ArgumentList 'tcp --forward 127.0.0.1:3389' -NoNewWindow
+          $pinggyPath = "$PWD\pinggy.exe"
+          if (!(Test-Path $pinggyPath)) { throw "Pinggy executable not found." }
+          Start-Process -FilePath $pinggyPath -ArgumentList 'tcp --forward 127.0.0.1:3389' -WindowStyle Hidden
