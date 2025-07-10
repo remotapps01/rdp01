@@ -1,11 +1,11 @@
-name: Free RDP with Pinggy
+name: Free RDP with Loophole
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Enable RDP and Start Tunnel
+    name: Enable RDP and Start Loophole Tunnel
     runs-on: windows-latest
     timeout-minutes: 360
 
@@ -17,14 +17,12 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "MySecurePassword123!" -Force)
 
-      - name: Download Pinggy Client
+      - name: Download Loophole CLI
         run: |
-          Invoke-WebRequest -Uri "https://pinggy.io/download/windows/pinggy.exe" -OutFile "pinggy.exe"
-          Start-Sleep -Seconds 3
-          if (!(Test-Path "pinggy.exe")) { throw "Pinggy download failed." }
+          curl -L -o loophole.zip "https://loophole.cloud/download/windows/loophole-cli-latest.zip"
+          Expand-Archive loophole.zip -DestinationPath loophole
+          if (!(Test-Path "loophole\loophole.exe")) { throw "Loophole download failed." }
 
-      - name: Launch Pinggy Tunnel
+      - name: Start Loophole Tunnel
         run: |
-          $pinggyPath = "$PWD\pinggy.exe"
-          if (!(Test-Path $pinggyPath)) { throw "Pinggy executable not found." }
-          Start-Process -FilePath $pinggyPath -ArgumentList 'tcp --forward 127.0.0.1:3389' -WindowStyle Hidden
+          .\loophole\loophole.exe tcp 3389
