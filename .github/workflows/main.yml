@@ -22,9 +22,15 @@ jobs:
           curl -L -o loophole.zip "https://loophole.cloud/download/windows/loophole-cli-latest.zip"
           Start-Sleep -Seconds 2
 
-      - name: Extract Loophole
+      - name: Extract Loophole (using Shell.Application)
         run: |
-          Expand-Archive loophole.zip -DestinationPath loophole
+          $zipPath = "loophole.zip"
+          $destination = "loophole"
+          New-Item -ItemType Directory -Force -Path $destination
+          $shell = New-Object -ComObject Shell.Application
+          $zip = $shell.NameSpace((Convert-Path $zipPath))
+          $target = $shell.NameSpace((Convert-Path $destination))
+          $target.CopyHere($zip.Items(), 0x10)
 
       - name: Start Loophole Tunnel
         run: |
