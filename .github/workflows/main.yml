@@ -22,14 +22,15 @@ jobs:
           curl -L -o loophole.zip "https://loophole.cloud/download/windows/loophole-cli-latest.zip"
           Start-Sleep -Seconds 2
 
-      - name: Extract Loophole (using Shell.Application)
+      - name: Extract Loophole (Shell.Application with resolved paths)
         run: |
-          $zipPath = "loophole.zip"
+          $zipPath = Resolve-Path "loophole.zip"
           $destination = "$PWD\\loophole"
           New-Item -ItemType Directory -Force -Path $destination
           $shell = New-Object -ComObject Shell.Application
-          $zip = $shell.NameSpace((Convert-Path $zipPath))
+          $zip = $shell.NameSpace($zipPath.Path)
           $target = $shell.NameSpace($destination)
+          if ($zip -eq $null -or $target -eq $null) { throw "Shell.Application failed to resolve paths." }
           $target.CopyHere($zip.Items(), 0x10)
           Start-Sleep -Seconds 2
 
