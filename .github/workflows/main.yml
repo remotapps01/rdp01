@@ -25,13 +25,16 @@ jobs:
       - name: Extract Loophole (using Shell.Application)
         run: |
           $zipPath = "loophole.zip"
-          $destination = "loophole"
+          $destination = "$PWD\\loophole"
           New-Item -ItemType Directory -Force -Path $destination
           $shell = New-Object -ComObject Shell.Application
           $zip = $shell.NameSpace((Convert-Path $zipPath))
-          $target = $shell.NameSpace((Convert-Path $destination))
+          $target = $shell.NameSpace($destination)
           $target.CopyHere($zip.Items(), 0x10)
+          Start-Sleep -Seconds 2
 
       - name: Start Loophole Tunnel
         run: |
-          .\loophole\loophole.exe tcp 3389
+          $exePath = "$PWD\\loophole\\loophole.exe"
+          if (!(Test-Path $exePath)) { throw "Loophole executable not found at $exePath" }
+          & $exePath tcp 3389
