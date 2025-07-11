@@ -11,6 +11,7 @@ jobs:
 
     steps:
       - name: Enable Remote Desktop
+        shell: powershell
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
@@ -18,23 +19,21 @@ jobs:
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "MySecurePassword123!" -Force)
 
       - name: Download Loophole CLI
+        shell: powershell
         run: |
-          curl -L -o loophole.zip "https://loophole.cloud/download/windows/loophole-cli-latest.zip"
+          Invoke-WebRequest -Uri "https://loophole.cloud/download/windows/loophole-cli-latest.zip" -OutFile "loophole.zip"
           Start-Sleep -Seconds 2
 
-      - name: Extract Loophole (Shell.Application with resolved paths)
+      - name: Extract Loophole CLI
+        shell: powershell
         run: |
-          $zipPath = Resolve-Path "loophole.zip"
           $destination = "$PWD\\loophole"
           New-Item -ItemType Directory -Force -Path $destination
-          $shell = New-Object -ComObject Shell.Application
-          $zip = $shell.NameSpace($zipPath.Path)
-          $target = $shell.NameSpace($destination)
-          if ($zip -eq $null -or $target -eq $null) { throw "Shell.Application failed to resolve paths." }
-          $target.CopyHere($zip.Items(), 0x10)
+          Expand-Archive -Path "loophole.zip" -DestinationPath $destination -Force
           Start-Sleep -Seconds 2
 
       - name: Start Loophole Tunnel
+        shell: powershell
         run: |
           $exePath = "$PWD\\loophole\\loophole.exe"
           if (!(Test-Path $exePath)) { throw "Loophole executable not found at $exePath" }
