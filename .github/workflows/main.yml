@@ -21,7 +21,9 @@ jobs:
       - name: Download Loophole CLI
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri "https://loophole.cloud/download/windows/loophole-cli-latest.zip" -OutFile "loophole.zip"
+          $url = "https://loophole.cloud/download/windows/loophole-cli_1.0.0-beta.15_windows_64bit.zip"
+          $outfile = "loophole.zip"
+          Invoke-WebRequest -Uri $url -OutFile $outfile
           Start-Sleep -Seconds 2
 
       - name: Extract Loophole CLI
