@@ -34,15 +34,23 @@ jobs:
         shell: powershell
         run: |
           $logPath = "$env:USERPROFILE\loclx_log.txt"
-          Start-Process -FilePath "loclx.exe" -ArgumentList "tunnel tcp --port 3389" -RedirectStandardOutput $logPath -NoNewWindow
-          Start-Sleep -Seconds 10
+          $exePath = "loclx.exe"
 
-          $endpoint = Get-Content $logPath | Select-String -Pattern "tcp://" | Select-Object -First 1
-          if ($endpoint) {
-            Write-Output "LocalXpose TCP Tunnel is active!"
-            Write-Output "Public RDP Endpoint: $($endpoint.Line)"
-            Write-Output "RDP Username: runneradmin"
-            Write-Output "RDP Password: MySecurePassword123!"
+          # Start the tunnel and redirect output to log
+          $proc = Start-Process -FilePath $exePath -ArgumentList "tunnel tcp --port 3389" -RedirectStandardOutput $logPath -NoNewWindow -PassThru
+          Start-Sleep -Seconds 15
+
+          # Extract endpoint from log
+          if (Test-Path $logPath) {
+            $endpoint = Get-Content $logPath | Select-String -Pattern "tcp://" | Select-Object -First 1
+            if ($endpoint) {
+              Write-Output "LocalXpose TCP Tunnel is active!"
+              Write-Output "Public RDP Endpoint: $($endpoint.Line)"
+              Write-Output "RDP Username: runneradmin"
+              Write-Output "RDP Password: MySecurePassword123!"
+            } else {
+              Write-Output "Tunnel started, but no endpoint found in logs."
+            }
           } else {
-            Write-Output "Failed to capture public endpoint. Check tunnel logs manually."
+            Write-Output "Log file not found. Tunnel may not have started correctly."
           }
