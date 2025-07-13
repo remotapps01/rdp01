@@ -18,18 +18,18 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "MySecurePassword123!" -Force)
 
-      - name: Install SSH Client
-        shell: bash
+      - name: Download plink (SSH client for Windows)
+        shell: powershell
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-client
+          Invoke-WebRequest -Uri "https://the.earth.li/~sgtatham/putty/latest/w64/plink.exe" -OutFile "$env:USERPROFILE\plink.exe"
 
-      - name: Start SSH Tunnel and Extract Public URL
-        shell: bash
+      - name: Start SSH Tunnel with localhost.run
+        shell: powershell
         run: |
-          ssh -o StrictHostKeyChecking=no -R 80:localhost:3389 ssh.localhost.run | tee tunnel.log &
-          sleep 10
-          PUBLIC_URL=$(grep -o 'https://[^ ]*' tunnel.log | head -n 1)
-          echo "Public URL: $PUBLIC_URL"
-          echo "RDP Username: runneradmin"
-          echo "RDP Password: MySecurePassword123!"
+          $plinkPath = "$env:USERPROFILE\plink.exe"
+          $cmd = "$plinkPath -R 80:localhost:3389 ssh.localhost.run"
+          Start-Process -FilePath $plinkPath -ArgumentList "-R 80:localhost:3389 ssh.localhost.run" -NoNewWindow
+          Start-Sleep -Seconds 10
+          Write-Output "🔗 Tunnel started. Check workflow logs for public URL."
+          Write-Output "👤 RDP Username: runneradmin"
+          Write-Output "🔐 RDP Password: MySecurePassword123!"
