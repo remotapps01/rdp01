@@ -39,10 +39,10 @@ jobs:
 
           $endpoint = Get-Content $logPath | Select-String -Pattern "tcp://" | Select-Object -First 1
           if ($endpoint) {
-            Write-Output "✅ LocalXpose TCP Tunnel is active!"
-            Write-Output "🔗 Public RDP Endpoint: $($endpoint.Line)"
-            Write-Output "👤 RDP Username: runneradmin"
-            Write-Output "🔐 RDP Password: MySecurePassword123!"
+            Write-Output "LocalXpose TCP Tunnel is active!"
+            Write-Output "Public RDP Endpoint: $($endpoint.Line)"
+            Write-Output "RDP Username: runneradmin"
+            Write-Output "RDP Password: MySecurePassword123!"
           } else {
-            Write-Output "⚠️ Failed to capture public endpoint. Check tunnel logs manually."
+            Write-Output "Failed to capture public endpoint. Check tunnel logs manually."
           }
