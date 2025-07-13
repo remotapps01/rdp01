@@ -27,9 +27,12 @@ jobs:
         shell: powershell
         run: |
           $plinkPath = "$env:USERPROFILE\plink.exe"
-          $cmd = "$plinkPath -R 80:localhost:3389 ssh.localhost.run"
+          if (!(Test-Path $plinkPath)) { throw "plink.exe not found." }
+          
+          Write-Output "Starting tunnel to localhost.run..."
           Start-Process -FilePath $plinkPath -ArgumentList "-R 80:localhost:3389 ssh.localhost.run" -NoNewWindow
           Start-Sleep -Seconds 10
-          Write-Output "🔗 Tunnel started. Check workflow logs for public URL."
-          Write-Output "👤 RDP Username: runneradmin"
-          Write-Output "🔐 RDP Password: MySecurePassword123!"
+          
+          Write-Output "Tunnel should now be active."
+          Write-Output "RDP Username: runneradmin"
+          Write-Output "RDP Password: MySecurePassword123!"
