@@ -1,11 +1,11 @@
-name: Free RDP with Pagekite
+name: Free RDP with LocalXpose
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Enable RDP and Start Pagekite Tunnel
+    name: Enable RDP and Start LocalXpose Tunnel
     runs-on: windows-latest
     timeout-minutes: 360
 
@@ -18,22 +18,27 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "MySecurePassword123!" -Force)
 
-      - name: Download Pagekite
+      - name: Download LocalXpose CLI
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri "https://pagekite.net/pk/pagekite.py" -OutFile "$env:USERPROFILE\pagekite.py"
+          Invoke-WebRequest -Uri "https://localxpose.io/download/windows/loclx.exe" -OutFile "$env:USERPROFILE\loclx.exe"
 
-      - name: Start Pagekite Tunnel
+      - name: Start LocalXpose TCP Tunnel and Capture Endpoint
         shell: powershell
         run: |
-          $kiteName = "rdptest.pagekite.me"
-          $kiteSecret = "letmein"
-          $pagekitePath = "$env:USERPROFILE\pagekite.py"
-          $cmd = "python $pagekitePath localhost:3389 tcp://$kiteName"
-          Write-Output "Starting Pagekite tunnel..."
-          Start-Process -FilePath "python" -ArgumentList "$pagekitePath localhost:3389 tcp://$kiteName" -NoNewWindow
+          $loclxPath = "$env:USERPROFILE\loclx.exe"
+          if (!(Test-Path $loclxPath)) { throw "LocalXpose CLI not found." }
+
+          $logPath = "$env:USERPROFILE\loclx_log.txt"
+          Start-Process -FilePath $loclxPath -ArgumentList "tunnel tcp --port 3389" -RedirectStandardOutput $logPath -NoNewWindow
           Start-Sleep -Seconds 10
-          Write-Output "Tunnel should now be active."
-          Write-Output "RDP Username: runneradmin"
-          Write-Output "RDP Password: MySecurePassword123!"
-          Write-Output "Connect using: $kiteName (via Pagekite TCP tunnel)"
+
+          $endpoint = Get-Content $logPath | Select-String -Pattern "tcp://" | Select-Object -First 1
+          if ($endpoint) {
+            Write-Output "✅ LocalXpose TCP Tunnel is active!"
+            Write-Output "🔗 Public RDP Endpoint: $($endpoint.Line)"
+            Write-Output "👤 RDP Username: runneradmin"
+            Write-Output "🔐 RDP Password: MySecurePassword123!"
+          } else {
+            Write-Output "⚠️ Failed to capture public endpoint. Check tunnel logs manually."
+          }
