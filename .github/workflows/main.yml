@@ -30,27 +30,16 @@ jobs:
         run: |
           choco install localxpose -y
 
-      - name: Start LocalXpose TCP Tunnel and Capture Endpoint
+      - name: Start LocalXpose TCP Tunnel and Display Endpoint
         shell: powershell
         run: |
-          $logPath = "$env:USERPROFILE\loclx_log.txt"
-          $exePath = "loclx.exe"
-
-          # Start the tunnel and redirect output to log
-          $proc = Start-Process -FilePath $exePath -ArgumentList "tunnel tcp --port 3389" -RedirectStandardOutput $logPath -NoNewWindow -PassThru
-          Start-Sleep -Seconds 15
-
-          # Extract endpoint from log
-          if (Test-Path $logPath) {
-            $endpoint = Get-Content $logPath | Select-String -Pattern "tcp://" | Select-Object -First 1
-            if ($endpoint) {
-              Write-Output "LocalXpose TCP Tunnel is active!"
-              Write-Output "Public RDP Endpoint: $($endpoint.Line)"
-              Write-Output "RDP Username: runneradmin"
-              Write-Output "RDP Password: MySecurePassword123!"
-            } else {
-              Write-Output "Tunnel started, but no endpoint found in logs."
-            }
+          $output = & loclx.exe tunnel tcp --port 3389 --raw-mode
+          $endpoint = $output | Select-String -Pattern "tcp://" | Select-Object -First 1
+          if ($endpoint) {
+            Write-Output "LocalXpose TCP Tunnel is active!"
+            Write-Output "Public RDP Endpoint: $($endpoint.Line)"
+            Write-Output "RDP Username: runneradmin"
+            Write-Output "RDP Password: MySecurePassword123!"
           } else {
-            Write-Output "Log file not found. Tunnel may not have started correctly."
+            Write-Output "Tunnel started, but no endpoint found in output."
           }
