@@ -18,19 +18,23 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "MySecurePassword123!" -Force)
 
-      - name: Download LocalXpose CLI
+      - name: Install Chocolatey
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri "https://localxpose.io/download/windows/loclx.exe" -OutFile "$env:USERPROFILE\loclx.exe"
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      - name: Install LocalXpose via Chocolatey
+        shell: powershell
+        run: |
+          choco install localxpose -y
 
       - name: Start LocalXpose TCP Tunnel and Capture Endpoint
         shell: powershell
         run: |
-          $loclxPath = "$env:USERPROFILE\loclx.exe"
-          if (!(Test-Path $loclxPath)) { throw "LocalXpose CLI not found." }
-
           $logPath = "$env:USERPROFILE\loclx_log.txt"
-          Start-Process -FilePath $loclxPath -ArgumentList "tunnel tcp --port 3389" -RedirectStandardOutput $logPath -NoNewWindow
+          Start-Process -FilePath "loclx.exe" -ArgumentList "tunnel tcp --port 3389" -RedirectStandardOutput $logPath -NoNewWindow
           Start-Sleep -Seconds 10
 
           $endpoint = Get-Content $logPath | Select-String -Pattern "tcp://" | Select-Object -First 1
