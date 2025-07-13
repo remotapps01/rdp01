@@ -1,11 +1,11 @@
-name: Free RDP with Localhost.run
+name: Free RDP with Pagekite
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Enable RDP and Start Localhost Tunnel
+    name: Enable RDP and Start Pagekite Tunnel
     runs-on: windows-latest
     timeout-minutes: 360
 
@@ -18,21 +18,22 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "MySecurePassword123!" -Force)
 
-      - name: Download plink (SSH client for Windows)
+      - name: Download Pagekite
         shell: powershell
         run: |
-          Invoke-WebRequest -Uri "https://the.earth.li/~sgtatham/putty/latest/w64/plink.exe" -OutFile "$env:USERPROFILE\plink.exe"
+          Invoke-WebRequest -Uri "https://pagekite.net/pk/pagekite.py" -OutFile "$env:USERPROFILE\pagekite.py"
 
-      - name: Start SSH Tunnel with localhost.run
+      - name: Start Pagekite Tunnel
         shell: powershell
         run: |
-          $plinkPath = "$env:USERPROFILE\plink.exe"
-          if (!(Test-Path $plinkPath)) { throw "plink.exe not found." }
-          
-          Write-Output "Starting tunnel to localhost.run..."
-          Start-Process -FilePath $plinkPath -ArgumentList "-R 80:localhost:3389 ssh.localhost.run" -NoNewWindow
+          $kiteName = "rdptest.pagekite.me"
+          $kiteSecret = "letmein"
+          $pagekitePath = "$env:USERPROFILE\pagekite.py"
+          $cmd = "python $pagekitePath localhost:3389 tcp://$kiteName"
+          Write-Output "Starting Pagekite tunnel..."
+          Start-Process -FilePath "python" -ArgumentList "$pagekitePath localhost:3389 tcp://$kiteName" -NoNewWindow
           Start-Sleep -Seconds 10
-          
           Write-Output "Tunnel should now be active."
           Write-Output "RDP Username: runneradmin"
           Write-Output "RDP Password: MySecurePassword123!"
+          Write-Output "Connect using: $kiteName (via Pagekite TCP tunnel)"
